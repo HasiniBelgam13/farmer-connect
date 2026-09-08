@@ -1,5 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { addRegistration } from "@/lib/registrations";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -70,19 +72,23 @@ const EMPTY: Values = {
 
 function validate(v: Values) {
   const e: Partial<Record<keyof Values, string>> = {};
-  if (v.farmerName.trim().length < 2) e.farmerName = "Enter the farmer's full name.";
-  if (!/^[A-Za-z0-9-]{4,20}$/.test(v.farmerId.trim()))
+  const REQUIRED = "This field is required";
+  (Object.keys(EMPTY) as (keyof Values)[]).forEach((k) => {
+    if (!v[k].trim()) e[k] = REQUIRED;
+  });
+  if (!e.farmerName && v.farmerName.trim().length < 2)
+    e.farmerName = "Enter the farmer's full name.";
+  if (!e.farmerId && !/^[A-Za-z0-9-]{4,20}$/.test(v.farmerId.trim()))
     e.farmerId = "Use 4–20 letters, numbers or hyphens.";
-  if (!/^\d{12}$/.test(v.aadhaar.replace(/\s/g, "")))
+  if (!e.aadhaar && !/^\d{12}$/.test(v.aadhaar.replace(/\s/g, "")))
     e.aadhaar = "Aadhaar must be exactly 12 digits.";
-  if (!/^[6-9]\d{9}$/.test(v.mobile.replace(/\s/g, "")))
+  if (!e.mobile && !/^[6-9]\d{9}$/.test(v.mobile.replace(/\s/g, "")))
     e.mobile = "Enter a valid 10-digit mobile number.";
-  if (v.surveyNumber.trim().length < 1) e.surveyNumber = "Survey number is required.";
-  if (!v.state) e.state = "Select a state.";
-  if (v.district.trim().length < 2) e.district = "District is required.";
-  if (v.village.trim().length < 2) e.village = "Village is required.";
+  if (!e.district && v.district.trim().length < 2) e.district = "Enter a valid district.";
+  if (!e.village && v.village.trim().length < 2) e.village = "Enter a valid village.";
   return e;
 }
+
 
 const labelCls = "block text-sm font-medium text-foreground";
 const fieldCls =
@@ -90,7 +96,9 @@ const fieldCls =
 const errCls = "mt-1.5 text-sm text-destructive";
 
 function FarmerRegistration() {
+  const navigate = useNavigate();
   const [values, setValues] = useState<Values>(EMPTY);
+
   const [errors, setErrors] = useState<Partial<Record<keyof Values, string>>>({});
   const [submitted, setSubmitted] = useState(false);
 
@@ -104,14 +112,17 @@ function FarmerRegistration() {
     const next = validate(values);
     setErrors(next);
     if (Object.keys(next).length === 0) {
+      addRegistration(values);
       setSubmitted(true);
       setValues(EMPTY);
+      setTimeout(() => navigate({ to: "/crops" }), 1200);
     } else {
       setSubmitted(false);
       const first = document.querySelector<HTMLElement>("[aria-invalid='true']");
       first?.focus();
     }
   };
+
 
   const err = (key: keyof Values) => errors[key];
   const aria = (key: keyof Values) =>
@@ -130,9 +141,6 @@ function FarmerRegistration() {
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Farmer Registration
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Fill in the details below to enroll a farmer. All fields are required.
-          </p>
         </header>
 
         {submitted && (
@@ -140,8 +148,9 @@ function FarmerRegistration() {
             role="status"
             className="mb-6 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm font-medium text-foreground"
           >
-            Registration submitted successfully.
+            Registration successful. Taking you to crop selection…
           </div>
+
         )}
 
         <form
@@ -348,6 +357,12 @@ function FarmerRegistration() {
           <p className="mt-3 text-center text-xs text-muted-foreground">
             Details are used only for scheme enrollment verification.
           </p>
+          <p className="mt-3 text-center text-sm">
+            <Link to="/admin" className="underline underline-offset-2">
+              View submitted registrations
+            </Link>
+          </p>
+
         </form>
       </div>
     </main>
