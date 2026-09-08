@@ -108,14 +108,17 @@ function FarmerRegistration() {
     const next = validate(values);
     setErrors(next);
     if (Object.keys(next).length === 0) {
+      addRegistration(values);
       setSubmitted(true);
       setValues(EMPTY);
+      setTimeout(() => navigate({ to: "/crops" }), 1200);
     } else {
       setSubmitted(false);
       const first = document.querySelector<HTMLElement>("[aria-invalid='true']");
       first?.focus();
     }
   };
+
 
   const err = (key: keyof Values) => errors[key];
   const aria = (key: keyof Values) =>
