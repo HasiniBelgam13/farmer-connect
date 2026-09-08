@@ -1,18 +1,20 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { addRegistration } from "@/lib/registrations";
+import { registerFarmer } from "@/lib/farmers.functions";
+import { setCurrentFarmerId } from "@/lib/session";
 
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Farmer Registration | AgriConnect" },
+      { title: "Farmer Registration | KisanSaarthi" },
       {
         name: "description",
         content:
           "Register farmer details including Farmer ID, Aadhaar, mobile number, survey number and location for agricultural scheme enrollment.",
       },
-      { property: "og:title", content: "Farmer Registration | AgriConnect" },
+      { property: "og:title", content: "Farmer Registration | KisanSaarthi" },
       {
         property: "og:description",
         content:
