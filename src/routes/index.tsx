@@ -99,25 +99,41 @@ const errCls = "mt-1.5 text-sm text-destructive";
 
 function FarmerRegistration() {
   const navigate = useNavigate();
+  const register = useServerFn(registerFarmer);
   const [values, setValues] = useState<Values>(EMPTY);
 
   const [errors, setErrors] = useState<Partial<Record<keyof Values, string>>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [duplicate, setDuplicate] = useState<"aadhaar" | "mobile" | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const set = (key: keyof Values) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setValues((prev) => ({ ...prev, [key]: e.target.value }));
     setErrors((prev) => ({ ...prev, [key]: undefined }));
+    setDuplicate(null);
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const next = validate(values);
     setErrors(next);
     if (Object.keys(next).length === 0) {
-      addRegistration(values);
-      setSubmitted(true);
-      setValues(EMPTY);
-      setTimeout(() => navigate({ to: "/crops" }), 1200);
+      setBusy(true);
+      setDuplicate(null);
+      try {
+        const res = await register({ data: values });
+        if (res.status === "already_registered") {
+          setSubmitted(false);
+          setDuplicate(res.matchedOn);
+          return;
+        }
+        setCurrentFarmerId(res.id);
+        setSubmitted(true);
+        setValues(EMPTY);
+        setTimeout(() => navigate({ to: "/crops" }), 1200);
+      } finally {
+        setBusy(false);
+      }
     } else {
       setSubmitted(false);
       const first = document.querySelector<HTMLElement>("[aria-invalid='true']");
@@ -138,12 +154,31 @@ function FarmerRegistration() {
       <div className="mx-auto w-full max-w-2xl">
         <header className="mb-6 text-center sm:mb-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-            AgriConnect
+            KisanSaarthi
           </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Farmer Registration
           </h1>
         </header>
+
+        {duplicate && (
+          <div
+            role="alert"
+            className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-foreground"
+          >
+            <p className="font-semibold">You are already registered.</p>
+            <p className="mt-1">
+              This {duplicate === "aadhaar" ? "Aadhaar ID" : "mobile number"} is already registered
+              with KisanSaarthi. Please log in with your phone number and Aadhaar ID.
+            </p>
+            <Link
+              to="/login"
+              className="mt-3 inline-block rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              Log in
+            </Link>
+          </div>
+        )}
 
         {submitted && (
           <div
