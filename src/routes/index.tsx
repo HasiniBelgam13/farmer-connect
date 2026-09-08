@@ -141,9 +141,6 @@ function FarmerRegistration() {
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Farmer Registration
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Fill in the details below to enroll a farmer. All fields are required.
-          </p>
         </header>
 
         {submitted && (
@@ -151,8 +148,9 @@ function FarmerRegistration() {
             role="status"
             className="mb-6 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-sm font-medium text-foreground"
           >
-            Registration submitted successfully.
+            Registration successful. Taking you to crop selection…
           </div>
+
         )}
 
         <form
