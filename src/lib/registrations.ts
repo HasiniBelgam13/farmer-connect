@@ -10,7 +10,8 @@ export type FarmerRecord = {
   district: string;
   village: string;
   crops?: string[];
-  otherCrop?: string;
+  otherCrop?: string | undefined;
+
 };
 
 const KEY = "agriconnect.registrations";
