@@ -387,14 +387,20 @@ function FarmerRegistration() {
 
           <button
             type="submit"
-            className="mt-8 w-full rounded-xl bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            disabled={busy}
+            className="mt-8 w-full rounded-xl bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            Register Farmer
+            {busy ? "Registering…" : "Register Farmer"}
           </button>
           <p className="mt-3 text-center text-xs text-muted-foreground">
             Details are used only for scheme enrollment verification.
           </p>
-          <p className="mt-3 text-center text-sm">
+          <p className="mt-4 text-center text-sm">
+            <Link to="/login" className="font-medium underline underline-offset-2">
+              Already registered? Log in
+            </Link>
+          </p>
+          <p className="mt-2 text-center text-sm">
             <Link to="/admin" className="underline underline-offset-2">
               View submitted registrations
             </Link>
