@@ -14,7 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      farmer_crops: {
+        Row: {
+          created_at: string
+          crop: string
+          farmer_id: string
+          id: string
+          other_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          crop: string
+          farmer_id: string
+          id?: string
+          other_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          crop?: string
+          farmer_id?: string
+          id?: string
+          other_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farmer_crops_farmer_id_fkey"
+            columns: ["farmer_id"]
+            isOneToOne: false
+            referencedRelation: "farmers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farmers: {
+        Row: {
+          aadhaar: string
+          created_at: string
+          district: string
+          farmer_code: string
+          farmer_name: string
+          id: string
+          mobile: string
+          state: string
+          survey_number: string
+          village: string
+        }
+        Insert: {
+          aadhaar: string
+          created_at?: string
+          district: string
+          farmer_code: string
+          farmer_name: string
+          id?: string
+          mobile: string
+          state: string
+          survey_number: string
+          village: string
+        }
+        Update: {
+          aadhaar?: string
+          created_at?: string
+          district?: string
+          farmer_code?: string
+          farmer_name?: string
+          id?: string
+          mobile?: string
+          state?: string
+          survey_number?: string
+          village?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
