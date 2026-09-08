@@ -96,7 +96,7 @@ export const loginFarmer = createServerFn({ method: "POST" })
   });
 
 export const saveCrops = createServerFn({ method: "POST" })
-  .inputValidator((input: { farmerId: string; crops: string[]; otherName?: string }) => input)
+  .inputValidator((input: { farmerId: string; crops: string[]; otherName?: string | undefined }) => input)
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("farmer_crops").delete().eq("farmer_id", data.farmerId);
