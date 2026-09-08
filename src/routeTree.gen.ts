@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CropsRouteImport } from './routes/crops'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as CropCropSlugRouteImport } from './routes/crop.$cropSlug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,9 +31,19 @@ const CropsRoute = CropsRouteImport.update({
   path: '/crops',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CropCropSlugRoute = CropCropSlugRouteImport.update({
+  id: '/crop/$cropSlug',
+  path: '/crop/$cropSlug',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -39,34 +51,50 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/crops': typeof CropsRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/crop/$cropSlug': typeof CropCropSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/crops': typeof CropsRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/crop/$cropSlug': typeof CropCropSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/crops': typeof CropsRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/crop/$cropSlug': typeof CropCropSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/crops' | '/login'
+  fullPaths:
+    '/' | '/admin' | '/crops' | '/dashboard' | '/login' | '/crop/$cropSlug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/crops' | '/login'
-  id: '__root__' | '/' | '/admin' | '/crops' | '/login'
+  to: '/' | '/admin' | '/crops' | '/dashboard' | '/login' | '/crop/$cropSlug'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/crops'
+    | '/dashboard'
+    | '/login'
+    | '/crop/$cropSlug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   CropsRoute: typeof CropsRoute
+  DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
+  CropCropSlugRoute: typeof CropCropSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,11 +120,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CropsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crop/$cropSlug': {
+      id: '/crop/$cropSlug'
+      path: '/crop/$cropSlug'
+      fullPath: '/crop/$cropSlug'
+      preLoaderRoute: typeof CropCropSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -106,7 +148,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   CropsRoute: CropsRoute,
+  DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
+  CropCropSlugRoute: CropCropSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

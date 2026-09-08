@@ -1,17 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { listRegistrations, type FarmerRecord } from "@/lib/registrations";
+import { listFarmers, type FarmerSummary } from "@/lib/farmers.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin — Submitted Registrations | AgriConnect" },
+      { title: "Admin — Submitted Registrations | KisanSaarthi" },
       {
         name: "description",
         content:
           "Admin view listing every submitted farmer registration with contact, land and crop details.",
       },
-      { property: "og:title", content: "Admin — Submitted Registrations | AgriConnect" },
+      { property: "og:title", content: "Admin — Submitted Registrations | KisanSaarthi" },
       {
         property: "og:description",
         content: "Review all farmer registrations submitted for scheme enrollment.",
@@ -24,19 +25,24 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminRegistrations() {
-  const [records, setRecords] = useState<FarmerRecord[]>([]);
+  const fetchAll = useServerFn(listFarmers);
+  const [records, setRecords] = useState<FarmerSummary[]>([]);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setRecords(listRegistrations());
-    setReady(true);
-  }, []);
+    fetchAll().then((rows) => {
+      setRecords(rows);
+      setReady(true);
+    });
+  }, [fetchAll]);
 
   return (
     <main className="min-h-screen bg-muted/40 px-4 py-8 sm:px-6 sm:py-12">
       <div className="mx-auto w-full max-w-3xl">
         <header className="mb-6 sm:mb-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Admin</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            KisanSaarthi · Admin
+          </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Submitted Registrations
           </h1>
@@ -59,10 +65,7 @@ function AdminRegistrations() {
 
         <ul className="space-y-4">
           {records.map((r) => (
-            <li
-              key={r.id}
-              className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6"
-            >
+            <li key={r.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className="text-lg font-semibold text-foreground">{r.farmerName}</h2>
                 <span className="text-xs text-muted-foreground">
@@ -80,9 +83,11 @@ function AdminRegistrations() {
                 <Row
                   label="Crops"
                   value={
-                    r.crops && r.crops.length
+                    r.crops.length
                       ? r.crops
-                          .map((c) => (c === "Other" && r.otherCrop ? `Other (${r.otherCrop})` : c))
+                          .map((c) =>
+                            c.crop === "Other" && c.otherName ? `Other (${c.otherName})` : c.crop,
+                          )
                           .join(", ")
                       : "Not selected"
                   }
