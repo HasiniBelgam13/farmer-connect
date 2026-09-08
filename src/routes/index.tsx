@@ -357,6 +357,12 @@ function FarmerRegistration() {
           <p className="mt-3 text-center text-xs text-muted-foreground">
             Details are used only for scheme enrollment verification.
           </p>
+          <p className="mt-3 text-center text-sm">
+            <Link to="/admin" className="underline underline-offset-2">
+              View submitted registrations
+            </Link>
+          </p>
+
         </form>
       </div>
     </main>
