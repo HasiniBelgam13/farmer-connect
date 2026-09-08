@@ -70,19 +70,23 @@ const EMPTY: Values = {
 
 function validate(v: Values) {
   const e: Partial<Record<keyof Values, string>> = {};
-  if (v.farmerName.trim().length < 2) e.farmerName = "Enter the farmer's full name.";
-  if (!/^[A-Za-z0-9-]{4,20}$/.test(v.farmerId.trim()))
+  const REQUIRED = "This field is required";
+  (Object.keys(EMPTY) as (keyof Values)[]).forEach((k) => {
+    if (!v[k].trim()) e[k] = REQUIRED;
+  });
+  if (!e.farmerName && v.farmerName.trim().length < 2)
+    e.farmerName = "Enter the farmer's full name.";
+  if (!e.farmerId && !/^[A-Za-z0-9-]{4,20}$/.test(v.farmerId.trim()))
     e.farmerId = "Use 4–20 letters, numbers or hyphens.";
-  if (!/^\d{12}$/.test(v.aadhaar.replace(/\s/g, "")))
+  if (!e.aadhaar && !/^\d{12}$/.test(v.aadhaar.replace(/\s/g, "")))
     e.aadhaar = "Aadhaar must be exactly 12 digits.";
-  if (!/^[6-9]\d{9}$/.test(v.mobile.replace(/\s/g, "")))
+  if (!e.mobile && !/^[6-9]\d{9}$/.test(v.mobile.replace(/\s/g, "")))
     e.mobile = "Enter a valid 10-digit mobile number.";
-  if (v.surveyNumber.trim().length < 1) e.surveyNumber = "Survey number is required.";
-  if (!v.state) e.state = "Select a state.";
-  if (v.district.trim().length < 2) e.district = "District is required.";
-  if (v.village.trim().length < 2) e.village = "Village is required.";
+  if (!e.district && v.district.trim().length < 2) e.district = "Enter a valid district.";
+  if (!e.village && v.village.trim().length < 2) e.village = "Enter a valid village.";
   return e;
 }
+
 
 const labelCls = "block text-sm font-medium text-foreground";
 const fieldCls =
