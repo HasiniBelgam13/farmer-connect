@@ -1,18 +1,20 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { addRegistration } from "@/lib/registrations";
+import { registerFarmer } from "@/lib/farmers.functions";
+import { setCurrentFarmerId } from "@/lib/session";
 
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Farmer Registration | AgriConnect" },
+      { title: "Farmer Registration | KisanSaarthi" },
       {
         name: "description",
         content:
           "Register farmer details including Farmer ID, Aadhaar, mobile number, survey number and location for agricultural scheme enrollment.",
       },
-      { property: "og:title", content: "Farmer Registration | AgriConnect" },
+      { property: "og:title", content: "Farmer Registration | KisanSaarthi" },
       {
         property: "og:description",
         content:
@@ -97,25 +99,41 @@ const errCls = "mt-1.5 text-sm text-destructive";
 
 function FarmerRegistration() {
   const navigate = useNavigate();
+  const register = useServerFn(registerFarmer);
   const [values, setValues] = useState<Values>(EMPTY);
 
   const [errors, setErrors] = useState<Partial<Record<keyof Values, string>>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [duplicate, setDuplicate] = useState<"aadhaar" | "mobile" | null>(null);
+  const [busy, setBusy] = useState(false);
 
   const set = (key: keyof Values) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setValues((prev) => ({ ...prev, [key]: e.target.value }));
     setErrors((prev) => ({ ...prev, [key]: undefined }));
+    setDuplicate(null);
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const next = validate(values);
     setErrors(next);
     if (Object.keys(next).length === 0) {
-      addRegistration(values);
-      setSubmitted(true);
-      setValues(EMPTY);
-      setTimeout(() => navigate({ to: "/crops" }), 1200);
+      setBusy(true);
+      setDuplicate(null);
+      try {
+        const res = await register({ data: values });
+        if (res.status === "already_registered") {
+          setSubmitted(false);
+          setDuplicate(res.matchedOn);
+          return;
+        }
+        setCurrentFarmerId(res.id);
+        setSubmitted(true);
+        setValues(EMPTY);
+        setTimeout(() => navigate({ to: "/crops" }), 1200);
+      } finally {
+        setBusy(false);
+      }
     } else {
       setSubmitted(false);
       const first = document.querySelector<HTMLElement>("[aria-invalid='true']");
@@ -136,12 +154,31 @@ function FarmerRegistration() {
       <div className="mx-auto w-full max-w-2xl">
         <header className="mb-6 text-center sm:mb-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-            AgriConnect
+            KisanSaarthi
           </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Farmer Registration
           </h1>
         </header>
+
+        {duplicate && (
+          <div
+            role="alert"
+            className="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-foreground"
+          >
+            <p className="font-semibold">You are already registered.</p>
+            <p className="mt-1">
+              This {duplicate === "aadhaar" ? "Aadhaar ID" : "mobile number"} is already registered
+              with KisanSaarthi. Please log in with your phone number and Aadhaar ID.
+            </p>
+            <Link
+              to="/login"
+              className="mt-3 inline-block rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+            >
+              Log in
+            </Link>
+          </div>
+        )}
 
         {submitted && (
           <div
@@ -350,14 +387,20 @@ function FarmerRegistration() {
 
           <button
             type="submit"
-            className="mt-8 w-full rounded-xl bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            disabled={busy}
+            className="mt-8 w-full rounded-xl bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            Register Farmer
+            {busy ? "Registering…" : "Register Farmer"}
           </button>
           <p className="mt-3 text-center text-xs text-muted-foreground">
             Details are used only for scheme enrollment verification.
           </p>
-          <p className="mt-3 text-center text-sm">
+          <p className="mt-4 text-center text-sm">
+            <Link to="/login" className="font-medium underline underline-offset-2">
+              Already registered? Log in
+            </Link>
+          </p>
+          <p className="mt-2 text-center text-sm">
             <Link to="/admin" className="underline underline-offset-2">
               View submitted registrations
             </Link>

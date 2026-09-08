@@ -1,22 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import {
-  clearPendingId,
-  getPendingId,
-  listRegistrations,
-  updateCrops,
-} from "@/lib/registrations";
+import { getFarmer, saveCrops } from "@/lib/farmers.functions";
+import { CROPS, getCurrentFarmerId } from "@/lib/session";
 
 export const Route = createFileRoute("/crops")({
   head: () => ({
     meta: [
-      { title: "Crop Selection | AgriConnect" },
+      { title: "Crop Selection | KisanSaarthi" },
       {
         name: "description",
         content:
           "Select the crops cultivated by the registered farmer, including paddy, wheat, maize, pulses, cotton, sugarcane and more.",
       },
-      { property: "og:title", content: "Crop Selection | AgriConnect" },
+      { property: "og:title", content: "Crop Selection | KisanSaarthi" },
       {
         property: "og:description",
         content: "Choose the crops grown by a registered farmer to complete enrollment.",
@@ -28,36 +25,37 @@ export const Route = createFileRoute("/crops")({
   component: CropSelection,
 });
 
-const CROPS = [
-  "Paddy",
-  "Wheat",
-  "Maize",
-  "Pulses",
-  "Grains",
-  "Oilseeds",
-  "Cotton",
-  "Jute",
-  "Sugarcane",
-  "Groundnut",
-  "Mirchi",
-  "Tea",
-  "Other",
-];
-
 function CropSelection() {
   const navigate = useNavigate();
+  const fetchFarmer = useServerFn(getFarmer);
+  const persist = useServerFn(saveCrops);
   const [selected, setSelected] = useState<string[]>([]);
   const [other, setOther] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [otherError, setOtherError] = useState<string | null>(null);
   const [farmerName, setFarmerName] = useState<string>("");
+  const [farmerId, setFarmerId] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    const id = getPendingId();
-    const record = listRegistrations().find((r) => r.id === id);
-    if (record) setFarmerName(record.farmerName);
-  }, []);
+    const id = getCurrentFarmerId();
+    if (!id) {
+      navigate({ to: "/login" });
+      return;
+    }
+    setFarmerId(id);
+    fetchFarmer({ data: { id } }).then((res) => {
+      if (!res) {
+        navigate({ to: "/login" });
+        return;
+      }
+      setFarmerName(res.farmerName);
+      setSelected(res.crops.map((c) => c.crop));
+      const otherEntry = res.crops.find((c) => c.crop === "Other");
+      if (otherEntry?.otherName) setOther(otherEntry.otherName);
+    });
+  }, [fetchFarmer, navigate]);
 
   const toggle = (crop: string) => {
     setError(null);
@@ -66,7 +64,7 @@ function CropSelection() {
     );
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let bad = false;
     if (selected.length === 0) {
@@ -77,13 +75,18 @@ function CropSelection() {
       setOtherError("This field is required");
       bad = true;
     }
-    if (bad) return;
+    if (bad || !farmerId) return;
 
-    const id = getPendingId();
-    if (id) updateCrops(id, selected, other.trim() || undefined);
-    clearPendingId();
-    setDone(true);
-    setTimeout(() => navigate({ to: "/admin" }), 1200);
+    setBusy(true);
+    try {
+      await persist({
+        data: { farmerId, crops: selected, otherName: other.trim() || undefined },
+      });
+      setDone(true);
+      setTimeout(() => navigate({ to: "/dashboard" }), 1200);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -91,14 +94,12 @@ function CropSelection() {
       <div className="mx-auto w-full max-w-2xl">
         <header className="mb-6 text-center sm:mb-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-            Step 2 of 2
+            KisanSaarthi · Step 2 of 2
           </p>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Crop Selection
           </h1>
-          {farmerName && (
-            <p className="mt-2 text-sm text-muted-foreground">For {farmerName}</p>
-          )}
+          {farmerName && <p className="mt-2 text-sm text-muted-foreground">For {farmerName}</p>}
         </header>
 
         {done ? (
@@ -109,7 +110,7 @@ function CropSelection() {
             <p className="text-base font-semibold text-foreground">
               Crops saved. Enrollment complete.
             </p>
-            <p className="mt-1 text-sm text-muted-foreground">Opening the records view…</p>
+            <p className="mt-1 text-sm text-muted-foreground">Opening your dashboard…</p>
           </div>
         ) : (
           <form
@@ -175,13 +176,14 @@ function CropSelection() {
 
             <button
               type="submit"
-              className="mt-8 w-full rounded-xl bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              disabled={busy}
+              className="mt-8 w-full rounded-xl bg-primary px-6 py-3.5 text-base font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
             >
-              Save Crops
+              {busy ? "Saving…" : "Save Crops"}
             </button>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              <Link to="/" className="underline underline-offset-2">
-                Back to farmer details
+              <Link to="/dashboard" className="underline underline-offset-2">
+                Go to my dashboard
               </Link>
             </p>
           </form>
