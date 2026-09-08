@@ -96,7 +96,9 @@ const fieldCls =
 const errCls = "mt-1.5 text-sm text-destructive";
 
 function FarmerRegistration() {
+  const navigate = useNavigate();
   const [values, setValues] = useState<Values>(EMPTY);
+
   const [errors, setErrors] = useState<Partial<Record<keyof Values, string>>>({});
   const [submitted, setSubmitted] = useState(false);
 
