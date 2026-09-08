@@ -35,13 +35,13 @@ function LoginPage() {
   const login = useServerFn(loginFarmer);
   const [mobile, setMobile] = useState("");
   const [aadhaar, setAadhaar] = useState("");
-  const [errors, setErrors] = useState<{ mobile?: string; aadhaar?: string }>({});
+  const [errors, setErrors] = useState<{ mobile?: string | undefined; aadhaar?: string | undefined }>({});
   const [failed, setFailed] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const next: { mobile?: string; aadhaar?: string } = {};
+    const next: { mobile?: string | undefined; aadhaar?: string | undefined } = {};
     if (!mobile.trim()) next.mobile = "This field is required";
     else if (!/^[6-9]\d{9}$/.test(mobile.replace(/\s/g, "")))
       next.mobile = "Enter a valid 10-digit mobile number.";
